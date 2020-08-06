@@ -1,19 +1,23 @@
 import {  Template} from 'meteor/templating';
+import { Mongo } from 'meteor/mongo';
 
 import './main.html';
 import './test.html';
 
-//
-// Template.hello.onCreated(function helloOnCreated() {
-// 
-// });
-//
-// Template.hello.helpers({
-//
-//   result() {
-//     return 'Su Mit';
-//   },
-// });
+
+Template.collections.onCreated(function collectionsOnCreated() {
+
+ Meteor.subscribe('mycollection');
+
+});
+
+Template.collections.helpers({
+
+
+  showCollections() {
+
+  },
+});
 //
 // Template.hello.events({
 //   'click button'(event, instance) {
