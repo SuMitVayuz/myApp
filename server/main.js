@@ -50,6 +50,6 @@ app.get('/name', (req, res) => {
 
   else
     res.status(200).json({
-      data: MyCollection.find({}).fetch()
+      names: MyCollection.find({}).fetch()
     });
 });
