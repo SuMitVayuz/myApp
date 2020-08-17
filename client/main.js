@@ -7,6 +7,7 @@ import {
 
 import './main.html';
 import './test.html';
+import { ReactiveVar } from 'meteor/reactive-var';
 
 const axios = require('axios').default;
 const MyCollection = new Mongo.Collection('mycollection');
@@ -59,20 +60,27 @@ function fetchNames() {
 // Read More/ less text Template
 
 
-var isReadMore = true;
+
+Template.text.onCreated(function() {
+
+  this.isReadMore = new ReactiveVar();
+  this.isReadMore.set(true);
+
+});
 
 Template.text.helpers({
 
   'getText': function(text) {
-    if (isReadMore)
+    if (Template.instance().isReadMore.get())
       return text.substr(0, Math.min(text.length, 100));
 
     return text;
 
   },
   'getIsMore': function(text) {
-    if (isReadMore)
-      return isReadMore;
+
+
+      return Template.instance().isReadMore.get();
 
   },
 
@@ -89,12 +97,12 @@ Template.text.events({
 
 
     if ($("#myBtn").text() == 'Read More') {
-      isReadMore = false;
+      Template.instance().isReadMore.set(false);
       $("#myBtn").text("Read Less");
       $("#dots").css("display", "none");
 
     } else {
-          isReadMore = true;
+            Template.instance().isReadMore.set(true);
       $("#myBtn").text("Read More");
         $("#dots").css("display", "inline");
     }
