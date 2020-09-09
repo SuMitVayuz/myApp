@@ -49,22 +49,22 @@ Meteor.methods({
 
 try {
   Accounts.createUser({
-    username: 'user1',
-    password: 'password1',
+    username: 'sumit',
+    password: '12345',
     profile: {
-      name: 'Apple',
-      surname: 'Seed',
+      name: 'Su',
+      surname: 'Mit',
     },
   });
 } catch (err) {}
 
 try {
   Accounts.createUser({
-    username: 'user2',
-    password: 'password2',
+    username: 'goku',
+    password: '12345',
     profile: {
-      name: 'John',
-      surname: 'Doe',
+      name: 'Goku',
+      surname: 'Son',
     },
   });
 } catch (err) {}
