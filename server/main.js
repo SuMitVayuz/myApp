@@ -1,55 +1,70 @@
-import {
-  Meteor
-} from 'meteor/meteor';
-import {
-  MyCollection
-} from './collections.js';
-import {
-  WebApp
-} from 'meteor/webapp';
-import express from 'express';
+import { Meteor } from 'meteor/meteor';
+import { Accounts } from 'meteor/accounts-base';
+import { Messages } from '../imports/collections';
 
-// Meteor.startup(() => {
-//   // code to run on server at startup
-//
-//
-// });
-
-
-
-
-WebApp.connectHandlers.use('/hello', (req, res, next) => {
-
-  console.log(req);
-
-  res.writeHead(200);
-  res.end('Hi! there');
-
+Meteor.publish('messages', function() {
+  if (this.userId) {
+    return Messages.find({}, {sort: { createdAt: 1 }});
+  }
+  return [];
 });
 
-
-const app = express();
-WebApp.connectHandlers.use(app);
-
-app.get('/name', (req, res) => {
-
-
-  if (req.query.name != null)
-    MyCollection.insert({
-      name: req.query.name
-    }, (err, id) => {
-
-      if (err) res.status(200).json({
-        error: err
-      });
-      else res.status(200).json({
-        data: MyCollection.find({}).fetch(),
-        query: req.query
-      });
+Meteor.publish(null, function() {
+  if (this.userId) {
+    return Meteor.users.find({}, {
+      fields: {
+        username: 1,
+        profile: 1,
+      },
     });
-
-  else
-    res.status(200).json({
-      names: MyCollection.find({}).fetch()
-    });
+  }
+  return [];
 });
+
+Meteor.methods({
+  'sendMessage'(msg) {
+    check(msg, String);
+    if (!this.userId) {
+      throw new Meteor.Error(401, 'Unauthorized');
+    }
+    Messages.insert({
+      from: this.userId,
+      msg: msg,
+      createdAt: new Date(),
+    });
+  },
+  'clearAllMessages'() {
+    if (!this.userId) {
+      throw new Meteor.Error(401, 'Unauthorized');
+    }
+    Messages.remove({});
+  },
+  'methodThatThrowErrorAsString'() {
+    throw new Meteor.Error('error', 'This is an error');
+  },
+  'methodThatThrowErrorAsInt'() {
+    throw new Meteor.Error(500, 'This is an error');
+  },
+});
+
+try {
+  Accounts.createUser({
+    username: 'user1',
+    password: 'password1',
+    profile: {
+      name: 'Apple',
+      surname: 'Seed',
+    },
+  });
+} catch (err) {}
+
+try {
+  Accounts.createUser({
+    username: 'user2',
+    password: 'password2',
+    profile: {
+      name: 'John',
+      surname: 'Doe',
+    },
+  });
+} catch (err) {}

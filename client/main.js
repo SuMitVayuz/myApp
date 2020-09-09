@@ -1,112 +1,60 @@
-import {
-  Template
-} from 'meteor/templating';
-import {
-  Mongo
-} from 'meteor/mongo';
+import { Meteor } from 'meteor/meteor';
+import { Template } from 'meteor/templating';
+import { ReactiveVar } from 'meteor/reactive-var';
+import { Messages } from '../imports/collections';
 
 import './main.html';
-import './test.html';
-import { ReactiveVar } from 'meteor/reactive-var';
 
-const axios = require('axios').default;
-const MyCollection = new Mongo.Collection('mycollection');
-
-
-Template.collections.onRendered(function() {
-  fetchNames();
-});
-
-
-
-Template.collections.helpers({
-
-  getNames: function() {
-    return MyCollection.find({}).fetch();
-  }
+Template.login.helpers({
 
 });
 
-
-
-function fetchNames() {
-
-
-  axios.get('/name')
-    .then(function(response) {
-      // handle success
-      var names = response.data.names;
-      for (var i = 0; i < names.length; i++) {
-        MyCollection.insert({
-          name: names[i].name
-        });
-      }
-    })
-    .catch(function(error) {
-      // handle error
-      console.log(error);
-    })
-    .then(function() {
-      // always executed
-      console.log(MyCollection.find({}).fetch());
+Template.login.events({
+  'submit form'(event, template) {
+    event.preventDefault();
+    const username = template.$('#username').val();
+    const password = template.$('#password').val();
+    Meteor.loginWithPassword(username, password, (err) => {
+      console.log(err);
+      template.$('.txtError').html(err.message);
     });
+  },
+});
 
-
-
-
-}
-
-
-// Read More/ less text Template
-
-
-
-Template.text.onCreated(function() {
-
-  this.isReadMore = new ReactiveVar();
-  this.isReadMore.set(true);
+Template.login.onCreated(function() {
 
 });
 
-Template.text.helpers({
-
-  'getText': function(text) {
-    if (Template.instance().isReadMore.get())
-      return text.substr(0, Math.min(text.length, 100));
-
-    return text;
-
+Template.chat.helpers({
+  user(idUser) {
+    return Meteor.users.findOne(idUser);
   },
-  'getIsMore': function(text) {
-
-
-      return Template.instance().isReadMore.get();
-
-  },
-
-
+  messages() {
+    return Messages.find({}, {
+      sort: {
+        createdAt: 1,
+      },
+    });
+  }
 });
 
-
-Template.text.events({
-
-
-  'click #myBtn': function(e) {
-    e.preventDefault();
-    console.log("The ID is clicked...");
-
-
-    if ($("#myBtn").text() == 'Read More') {
-      Template.instance().isReadMore.set(false);
-      $("#myBtn").text("Read Less");
-      $("#dots").css("display", "none");
-
-    } else {
-            Template.instance().isReadMore.set(true);
-      $("#myBtn").text("Read More");
-        $("#dots").css("display", "inline");
+Template.chat.events({
+  'click .btnLogout'() {
+    Meteor.logout();
+  },
+  'click .btnSend'(event, template) {
+    const msg = template.$('.txtMessage').val();
+    Meteor.call('sendMessage', msg, (err, res) => {
+      template.$('.txtMessage').val('');
+    });
+  },
+  'click .btnClearAll'() {
+    if (confirm('Do you want to delete all chat message?')) {
+      Meteor.call('clearAllMessages');
     }
+  }
+});
 
-
-  },
+Template.chat.onCreated(function() {
+  this.subscribe('messages');
 });
